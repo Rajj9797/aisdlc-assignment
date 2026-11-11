@@ -32,4 +32,4 @@
 ## Notes
 
 - The externally observable HTTP routes, methods, headers, and status codes are specified because they are part of the requested service contract, not implementation architecture.
-- All listed criteria passed. The configuration source/format is the only unresolved planning decision and does not block specification readiness.
+- All listed criteria passed. JSON configuration and safe demo/real-key sources are selected in the implementation plan.

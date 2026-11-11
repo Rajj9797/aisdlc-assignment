@@ -1,0 +1,96 @@
+openapi: 3.1.0
+info:
+  title: Tiered Rate Limiter API
+  version: 1.0.0
+  description: Health and tier-limited resource endpoints.
+servers:
+  - url: http://localhost:3000
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Check service health
+      responses:
+        "200":
+          description: The service is healthy; no API key or rate-limit token is required.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    const: ok
+                required:
+                  - status
+  /api/resource:
+    get:
+      operationId: getResource
+      summary: Access the tier-limited resource
+      security:
+        - ApiKey: []
+      responses:
+        "200":
+          description: Request allowed; exactly one token was consumed.
+          headers:
+            X-RateLimit-Limit:
+              description: Token capacity for the client's configured tier.
+              schema:
+                type: number
+                minimum: 1
+            X-RateLimit-Remaining:
+              description: Whole tokens remaining after consumption, rounded down.
+              schema:
+                type: integer
+                minimum: 0
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Resource payload; its content is outside this rate-limiter contract.
+        "401":
+          description: API key is missing or blank.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: API key is not configured.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: No full token is available; rejected requests do not consume a token.
+          headers:
+            Retry-After:
+              description: Positive whole seconds until one token is available, rounded up.
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Configured client key. Missing or blank values receive HTTP 401.
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          enum:
+            - missing_api_key
+            - unknown_api_key
+            - rate_limit_exceeded
+        message:
+          type: string
+      required:
+        - error
+        - message

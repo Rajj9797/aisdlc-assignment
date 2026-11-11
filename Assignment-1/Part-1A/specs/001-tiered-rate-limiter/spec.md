@@ -1,6 +1,6 @@
 # Feature Specification: Tiered Rate Limiter
 
-**Feature Branch**: `main`
+**Feature Branch**: `001-tiered-rate-limiter`
 
 **Created**: 2026-11-11
 
@@ -90,14 +90,13 @@ An operator can configure client keys and tier limits, and receives a clear star
 - **FR-006**: A resource request without one full token MUST return HTTP 429 and a `Retry-After` header containing the number of whole seconds, rounded up, until one token is available; rejection MUST NOT consume tokens or create token debt.
 - **FR-007**: A GET request to `/health` MUST return HTTP 200 regardless of API-key presence or rate-limit state and MUST NOT consume a token.
 - **FR-008**: A protected-resource request without an API-key header MUST receive HTTP 401; a request with an unrecognized key MUST receive HTTP 403.
-- **FR-009**: Invalid or incomplete tier configuration, including unsupported tiers or non-positive capacity/refill values, MUST prevent startup and produce an error identifying the invalid setting without exposing configured API-key values.
+- **FR-009**: Invalid or incomplete tier configuration, including unsupported tiers, capacity below one token, or non-positive refill values, MUST prevent startup and produce an error identifying the invalid setting without exposing configured API-key values.
 - **FR-010**: Rate-limit state MUST be held in memory only, and the service MUST NOT persist it or coordinate rate limits across service instances.
 - **FR-011**: The service MUST NOT provide authentication beyond API-key lookup or include a user interface.
 
 ### Non-Functional Requirements
 
 - **NFR-001**: Rate-limit decisions MUST be consistent for concurrent requests from the same client: a token MUST NOT be granted to more than one request.
-- **NFR-002**: For a test run with 100 concurrent clients and 100 concurrent resource requests, at least 95% of responses MUST complete within 500 milliseconds on the acceptance-test environment.
 - **NFR-003**: Client-facing responses MUST NOT disclose configured API-key values.
 
 ### Acceptance Criteria
@@ -111,7 +110,7 @@ An operator can configure client keys and tier limits, and receives a clear star
 - **AC-07**: Two API keys mapped to the same or different tiers have separate bucket state; exhausting one key does not change the other key's remaining allowance.
 - **AC-08**: A GET to `/health` returns HTTP 200 without an API key and does not change any client's bucket balance, including when that bucket is exhausted.
 - **AC-09**: A GET to `/api/resource` with a missing or blank `X-API-Key` returns HTTP 401; a GET with a non-blank unconfigured key returns HTTP 403.
-- **AC-10**: Startup with valid tier configuration succeeds; startup with an unsupported tier, missing required tier limit, or non-positive capacity/refill fails before requests are served and identifies the invalid configuration without printing API-key values.
+- **AC-10**: Startup with valid tier configuration succeeds; startup with an unsupported tier, missing required tier limit, capacity below one token, or non-positive refill rate fails before requests are served and identifies the invalid configuration without printing API-key values.
 - **AC-11**: After a service restart, previously accumulated in-memory bucket state is absent and each configured client's bucket is initially full.
 - **AC-12**: With a fixed clock and a full free-tier bucket, 20 simultaneous requests from one key result in exactly 10 HTTP 200 responses and exactly 10 HTTP 429 responses.
 
@@ -130,7 +129,6 @@ An operator can configure client keys and tier limits, and receives a clear star
 - **SC-002**: Across all three default tiers, 100% of requests made without a full token are denied, and the reported retry delay is the correct positive whole-second wait.
 - **SC-003**: 100% of tested requests without a key and with an unknown key receive distinct client-error statuses, while health checks succeed in all tested rate-limit states.
 - **SC-004**: All invalid tier configurations in the acceptance suite fail before the service accepts requests and identify the invalid setting without disclosing API keys.
-- **SC-005**: At least 95% of responses complete within 500 milliseconds in the defined 100-client concurrent acceptance test.
 
 ## Assumptions
 
@@ -141,9 +139,5 @@ An operator can configure client keys and tier limits, and receives a clear star
 - A blank API-key header is treated as a missing key.
 - Default tier definitions apply unless valid configuration overrides them; configured keys must map to one of the three defined tiers.
 - When a request is rate limited, the error response need not include the two success-only rate-limit headers.
-- The 100-client performance criterion is measured in the project acceptance-test environment, not under an unspecified production hardware profile.
 - Restarting the process resets all in-memory rate-limit state; persistence and cross-instance coordination are intentionally excluded.
-
-## Unresolved Questions
-
-- Which configuration source and serialization format should provide API-key mappings and any tier overrides? Select this during planning using existing project conventions.
+- Configuration is JSON: committed demo configuration provides the default tiers and visibly fake keys; real keys are supplied through a git-ignored local file or an environment variable. The selected configuration behavior is detailed in the implementation plan.
