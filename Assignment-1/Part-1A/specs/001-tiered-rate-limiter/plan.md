@@ -167,8 +167,10 @@ tests/                       # Student-authored from the acceptance criteria
 └── integration/
     ├── resource.test.js
     └── health.test.js
-.harness/                    # Student-authored harness
-└── run-harness.js           # Runs lint, security, audit and tests; saves results
+harness/                    # Student-authored harness
+├── run-harness.js           # Runs lint, security, audit and tests; saves results
+├── eslint.config.js         # Lint and eslint-plugin-security rules (gate config)
+└── jest.config.js           # Jest config with 90% line-coverage threshold on token-bucket.js
 evidence/
 ├── initial-generation/      # First generated src/ preserved before any repair
 ├── final-generation/        # Final src/ after any repair
@@ -176,7 +178,6 @@ evidence/
 └── harness-log.md           # Student-authored log
 package.json
 package-lock.json
-eslint.config.js
 ```
 
 `tests/` and `.harness/` are authored by the student before implementation. The implementing agent does not create or modify them. `evidence/` is maintained by the student.
