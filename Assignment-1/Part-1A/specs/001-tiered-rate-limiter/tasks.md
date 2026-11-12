@@ -35,9 +35,9 @@ description: "Implementation tasks for the tiered rate limiter"
 
 ### Implementation for User Story 1
 
-- [ ] T005 [P] [US1] Implement the initial-full token bucket and synchronous one-token consume result in `src/rate-limit/token-bucket.js`; preserve fractional balance, allow only when at least one token is available, and report whole tokens by rounding down (FR-003, FR-004, FR-005; AC-01, AC-03, AC-04).
-- [ ] T006 [P] [US1] Implement the per-configured-key in-memory bucket map in `src/rate-limit/bucket-store.js`, creating a separate bucket for each known API key and never creating state for unknown keys (FR-001, FR-003, FR-010; AC-07, AC-11).
-- [ ] T007 [US1] Implement the Express app factory and `GET /api/resource` success path in `src/app.js`; resolve the configured key's tier, consume one token, and return HTTP 200 with `X-RateLimit-Limit` and `X-RateLimit-Remaining` (FR-001, FR-004, FR-005; AC-02, AC-03, AC-04).
+- [ ] T005 [P] [US1] Implement the initial-full token bucket in `src/rate-limit/token-bucket.js`, exporting `createTokenBucket({ capacity, refillRatePerSecond, now })`; the bucket starts full with its last-refill time set to `now()` at creation, and the returned object has a synchronous `tryConsume()` returning `{ allowed, remaining, retryAfterSeconds }`; preserve fractional balance, allow only when at least one token is available, and report whole tokens by rounding down (FR-003, FR-004, FR-005; AC-01, AC-03, AC-04).
+- [ ] T006 [P] [US1] Implement the per-configured-key in-memory bucket map in `src/rate-limit/bucket-store.js`, exporting `createBucketStore({ config, now })` with `has(apiKey)` and `consume(apiKey)`; `consume` returns the token-bucket result plus the tier's `limit`; create a separate bucket lazily for each known API key and never create state for unknown keys (FR-001, FR-003, FR-010; AC-07, AC-11).
+- [ ] T007 [US1] Implement the Express app factory and `GET /api/resource` success path in `src/app.js`, exporting `createApp({ config, now })` which returns an Express app without listening on a port; `src/app.js` owns routing, key lookup and the HTTP mapping of limiter results (there is no separate middleware module); resolve the configured key's tier, consume one token, and return HTTP 200 with `X-RateLimit-Limit` and `X-RateLimit-Remaining` (FR-001, FR-004, FR-005; AC-02, AC-03, AC-04).
 
 ## Phase 4: User Story 2 - Recover after reaching the limit (Priority: P1)
 
@@ -70,8 +70,8 @@ description: "Implementation tasks for the tiered rate limiter"
 ### Implementation for User Story 4
 
 - [ ] T012 [P] [US4] Create `config/demo.json` with free `{ "capacity": 10, "refillRatePerSecond": 1 }`, pro `{ "capacity": 100, "refillRatePerSecond": 10 }`, and enterprise `{ "capacity": 1000, "refillRatePerSecond": 100 }` tiers plus visibly fake demo keys mapped to each tier (FR-001, FR-002; AC-02).
-- [ ] T013 [US4] Implement JSON configuration loading and validation in `src/config/load-config.js`; require all three tier definitions, finite capacity values greater than or equal to one, finite positive refill rates, non-blank client keys, and client values naming a configured tier; read the file named by RATE_LIMITER_CONFIG_FILE, defaulting to config/demo.json; report invalid field/index without printing key values (FR-001, FR-002, FR-009; AC-02, AC-10).
-- [ ] T015 [US4] Implement startup in `src/server.js` so configuration validates before Express listens, the app receives the production monotonic clock and fresh in-memory store, and startup failures exit non-zero with actionable secret-safe errors.
+- [ ] T013 [US4] Implement JSON configuration loading and validation in `src/config/load-config.js`, exporting `loadConfig({ env, readFile })` and `ConfigError`; read the file named by `env.RATE_LIMITER_CONFIG_FILE`, defaulting to `config/demo.json`, using the synchronous `readFile(path)` that returns a string; return `{ tiers, clients }`; require all three tier definitions, finite capacity values greater than or equal to one, finite positive refill rates, non-blank client keys, and client values naming a configured tier; throw a `ConfigError` that names the invalid field or entry index and never contains an API-key value (FR-001, FR-002, FR-009; AC-02, AC-10).
+- [ ] T015 [US4] Implement startup in `src/server.js`: read the port from `PORT` (default 3000), call `loadConfig` before `listen`, construct the app with the production monotonic clock and a fresh in-memory store, and on a `ConfigError` print a secret-safe message and exit non-zero (FR-009, FR-010; AC-10, AC-11).
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 

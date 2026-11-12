@@ -6,13 +6,13 @@
 
 ## Summary
 
-Build a single-process Node.js and Express HTTP service. A validated JSON configuration maps API keys to the free, pro, or enterprise tier. A synchronous, in-memory token bucket is created per configured key, uses an injected monotonic clock, and gates `GET /api/resource`. Health checks bypass client lookup and limiting. Demo credentials live only in committed example configuration; local and environment overrides supply real credentials without committing them.
+Build a single-process Node.js and Express HTTP service. A validated JSON configuration maps API keys to the free, pro, or enterprise tier. A synchronous, in-memory token bucket is created per configured key, uses an injected monotonic clock, and gates `GET /api/resource`. Health checks bypass client lookup and limiting. Demo credentials live only in committed example configuration; a git-ignored local configuration file, selected with RATE_LIMITER_CONFIG_FILE, supplies real credentials without committing them.
 
 ## Technical Context
 
-**Language/Version**: JavaScript, Node.js 22 LTS, ECMAScript modules
+**Language/Version**: JavaScript, Node.js 22 LTS or newer, CommonJS modules
 
-**Primary Dependencies**: Express 5; Jest and Supertest for tests; ESLint with `eslint-plugin-security` for static checks. Use Node.js built-ins for JSON and environment configuration; no limiter or storage dependency.
+**Primary Dependencies**: Express 5; Jest and Supertest for tests; ESLint with `eslint-plugin-security` for static checks. Use Node.js built-ins for JSON file configuration; no limiter or storage dependency.
 
 **Storage**: Process memory for bucket state; JSON files for non-secret tier/client configuration.
 
@@ -24,7 +24,7 @@ Build a single-process Node.js and Express HTTP service. A validated JSON config
 
 **Performance Goals**: None gated; correctness under concurrency is verified deterministically.
 
-**Constraints**: One process and in-memory state only; no external store or cross-instance coordination. No authentication beyond exact API-key lookup and no user interface. The core limiter receives time from an injected monotonic clock. Demo keys are visibly fake; actual keys are supplied from a git-ignored local configuration file or an environment variable and are never logged or returned.
+**Constraints**: One process and in-memory state only; no external store or cross-instance coordination. No authentication beyond exact API-key lookup and no user interface. The core limiter receives time from an injected monotonic clock. Demo keys are visibly fake; actual keys are supplied from a git-ignored local configuration file selected with RATE_LIMITER_CONFIG_FILE and are never logged or returned.
 
 **Scale/Scope**: State is created only for configured keys, so bucket count is bounded by the validated client map. Horizontal scaling and distributed rate-limit consistency are explicitly out of scope.
 
@@ -42,16 +42,16 @@ Build a single-process Node.js and Express HTTP service. A validated JSON config
 | ESLint and `eslint-plugin-security` | Run lint and security rules as release checks; do not disable rules to pass | PASS |
 | Dependency security | Run `npm audit --audit-level=high`; correct high/critical findings rather than suppressing them | PASS |
 | Acceptance tests and core limiter coverage | Jest/Supertest tests cover the acceptance contract; require at least 90% line coverage for core limiter logic | PASS |
-| Change integrity | Add tests for behavior; do not weaken existing assertions or harness gates to obtain a pass | PASS |
+| Change integrity | Tests and harness are student-authored; the agent does not modify them or weaken any gate; do not weaken existing assertions or harness gates to obtain a pass | PASS |
 
 No constitution violations or exceptions are required.
 
 ## Architecture
 
-1. **Configuration loader** reads the selected JSON file, applies any explicit client-map environment override, validates the complete configuration, and returns an immutable runtime configuration. It runs before `listen`, so malformed files and unsupported/missing tier values produce a non-zero startup failure rather than a partially running service.
+1. **Configuration loader** reads the selected JSON file, validates the complete configuration, and returns an immutable runtime configuration. It runs before `listen`, so malformed files and unsupported/missing tier values produce a non-zero startup failure rather than a partially running service.
 2. **Application factory** receives validated configuration, a clock, and a fresh bucket store. It creates the Express app without opening a listening socket, allowing Supertest to exercise the exact production routes.
 3. **Health route** is registered independently of the protected route and returns success without API-key lookup or bucket access.
-4. **Protected route** treats a missing or blank `X-API-Key` as 401, looks up the exact configured key (unknown keys receive 403), and asks the limiter to consume one token. An allowed request returns 200 with the configured capacity and remaining whole tokens. A denied request returns 429 with an integer `Retry-After` rounded up.
+4. **Protected route** treats a missing or blank `X-API-Key` as 401, looks up the exact configured key (unknown keys receive 403), and asks the limiter to consume one token. An allowed request returns 200 with the configured capacity and remaining whole tokens. A denied request returns 429 with an integer `Retry-After` rounded up. src/app.js owns routing, key lookup and the HTTP mapping of limiter results; there is no separate middleware module.
 5. **Token bucket** is synchronous and process-local. For a known key it refills by elapsed monotonic time, caps at the configured capacity, and consumes one token only when at least one token is available. Refill/check/debit has no `await` or callback boundary, so requests in the single Node.js process cannot interleave the state transition. A multi-process deployment is not supported by this design.
 6. **Server entry point** loads configuration, constructs the app with the system clock, and then listens. It does not log request headers, API keys, raw configuration, or parser input.
 
@@ -89,9 +89,8 @@ The committed `config/demo.json` contains the default tier definitions and clear
 
 - Every supported tier must be present. `capacity` must be a finite number of at least one, and `refillRatePerSecond` must be finite and positive. Unknown tier names, missing values, invalid client mappings, and malformed JSON fail startup.
 - Each `clients` property name is an exact API key and its value is one of the configured tier names. Configuration errors identify a field or entry index, never the key value.
-- By default, the service reads `config/demo.json`. `RATE_LIMITER_CONFIG_FILE` selects another complete JSON configuration file, such as git-ignored `config/local.json`. `RATE_LIMITER_CLIENTS_JSON`, when set, must be a JSON object mapping keys to tiers and replaces the file's `clients` map; the file continues to define the tier limits.
-- Add `/Assignment-1/Part-1A/config/local.json` to the repository-root `.gitignore`; never commit it. The environment value and selected file path must not be logged. In production mode, require an explicit non-demo configuration source so committed demo keys are not used as a fallback.
-- Values from `RATE_LIMITER_CLIENTS_JSON` take precedence over the file's client map. There is no implicit merge of key maps.
+- By default, the service reads `config/demo.json`. `RATE_LIMITER_CONFIG_FILE` selects another complete JSON configuration file, such as git-ignored `config/local.json`.
+- `config/local.json` is git-ignored through `Assignment-1/.gitignore` and is never committed. The selected file path and its contents must not be logged.
 
 The source of default tier values is configuration rather than constants embedded in rate-limiting logic.
 
@@ -113,6 +112,7 @@ The runtime data shapes and state transitions are defined in [data-model.md](./d
 
 - **Unit**: tier/config validation, startup errors without secret leakage, initial-full buckets, exact token consumption, refill and capacity cap, fractional balance rounding, exact retry rounding, unchanged state on denial, independent keys, and clock rollback handling.
 - **Integration/contract**: health without credentials or bucket use; missing and unknown key status distinction; per-tier headers; 429 retry header; the fixed-clock 20-request/10-allowed concurrency scenario; and restart/reset behavior.
+- **Startup**: a test spawns `src/server.js` as a child process with `RATE_LIMITER_CONFIG_FILE` pointing at an invalid fixture under `tests/fixtures/`, and asserts a non-zero exit, an error naming the invalid setting, and no API-key value in the output. (AC-10)
 - **Coverage**: Jest coverage for core limiter logic must remain at or above 90% line coverage.
 - **Lint/security**: `npm run lint` must pass with the security plugin enabled.
 - **Dependency audit**: `npm audit --audit-level=high` must report no high- or critical-severity findings.
@@ -122,12 +122,11 @@ The runtime data shapes and state transitions are defined in [data-model.md](./d
 
 These exported names and shapes are fixed so that independently authored tests can target them. Time is always supplied as a clock function `now()` that returns milliseconds as a number.
 
-- `src/config/load-config.js` exports `loadConfig({ env, readFile })` and returns `{ tiers, clients }`. On invalid configuration it throws a `ConfigError` whose message names the invalid setting but never contains an API-key value.
-- `src/rate-limit/token-bucket.js` exports `createTokenBucket({ capacity, refillRatePerSecond, now })`. The returned object has `tryConsume()`, which returns `{ allowed, remaining, retryAfterSeconds }`. `remaining` is a whole number, and `retryAfterSeconds` is a positive integer when `allowed` is false and `null` when it is true. A rejected call changes no state.
+- `src/config/load-config.js` exports `loadConfig({ env, readFile })` and `ConfigError`. `loadConfig` takes the file path from `env.RATE_LIMITER_CONFIG_FILE`, defaulting to `config/demo.json`; `readFile(path)` is synchronous and returns the file contents as a string (defaulting to `fs.readFileSync(path, 'utf8')`). It returns `{ tiers, clients }`. On invalid configuration it throws a `ConfigError` whose message names the invalid setting but never contains an API-key value.
+- `src/rate-limit/token-bucket.js` exports `createTokenBucket({ capacity, refillRatePerSecond, now })`. The bucket starts full, with its last-refill time set to `now()` at creation. The returned object has `tryConsume()`, which returns `{ allowed, remaining, retryAfterSeconds }`. `remaining` is a whole number, and `retryAfterSeconds` is a positive integer when `allowed` is false and `null` when it is true. A rejected call changes no state.
 - `src/rate-limit/bucket-store.js` exports `createBucketStore({ config, now })`. The returned object has `has(apiKey)` and `consume(apiKey)`; `consume` returns the same shape as `tryConsume()` plus the tier's `limit`. Buckets are created lazily and only for configured keys.
 - `src/app.js` exports `createApp({ config, now })`, which returns an Express app without listening on a port.
-- `src/server.js` loads configuration, calls `createApp` with the system clock and listens. It is not unit-tested directly; startup failure (AC-10) is verified through `loadConfig`.
-
+- `src/server.js` reads the port from PORT (default 3000), calls loadConfig before listen, and on a ConfigError prints a secret-safe message and exits non-zero.
 
 ## Project Structure
 
@@ -155,19 +154,20 @@ src/
 ├── server.js                # Config load, app construction, listen, startup errors
 ├── config/
 │   └── load-config.js       # Config sources and validation
-├── middleware/
-│   └── rate-limit.js        # API-key lookup and HTTP mapping
 └── rate-limit/
+    ├── clock.js             # Production monotonic clock; tests inject their own
     ├── token-bucket.js      # Pure bucket decision logic; injected clock
     └── bucket-store.js      # Per-configured-key in-memory state
 tests/                       # Student-authored from the acceptance criteria
+├── fixtures/                # Invalid config files used by the startup test
 ├── unit/
 │   ├── config.test.js
 │   └── token-bucket.test.js
 └── integration/
     ├── resource.test.js
-    └── health.test.js
-harness/                    # Student-authored harness
+    ├── health.test.js
+    └── startup.test.js
+.harness/                    # Student-authored harness
 ├── run-harness.js           # Runs lint, security, audit and tests; saves results
 ├── eslint.config.js         # Lint and eslint-plugin-security rules (gate config)
 └── jest.config.js           # Jest config with 90% line-coverage threshold on token-bucket.js

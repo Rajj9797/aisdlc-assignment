@@ -47,19 +47,13 @@ Expected:
 
 ## Use real/local credentials
 
-Create `config/local.json` from the configuration shape in [plan.md](./plan.md), replace demo values with real keys, and select it explicitly:
+To use real keys, create the git-ignored file `config/local.json` (same format as `config/demo.json`) and start the service with:
 
-```sh
+```bash
 RATE_LIMITER_CONFIG_FILE=config/local.json npm start
 ```
 
-Alternatively, supply only the client map through the environment while keeping tier limits from the selected file:
-
-```sh
-RATE_LIMITER_CLIENTS_JSON='{"replace-with-real-key":"pro"}' npm start
-```
-
-Do not commit `config/local.json`, put real keys in shell history or documentation, or print API-key environment values. In production mode an explicit non-demo configuration source is required.
+Do not commit `config/local.json`, and do not put real keys in shell history or documentation.
 
 ## Deterministic rate-limit validation
 

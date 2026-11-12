@@ -6,7 +6,7 @@
 
 ### Service structure and HTTP integration
 
-- **Decision**: Use an Express app factory; keep API-key lookup and response mapping in middleware/route wiring, and keep token-bucket calculations in an independent module.
+- **Decision**: Use an Express app factory; keep API-key lookup and response mapping in route wiring in src/app.js, and keep token-bucket calculations in an independent module. This also fixes the typo “lookupand”.
 - **Rationale**: Express middleware runs in request order and must either complete a response or pass control onward. A separate limiter makes state transitions independently unit-testable and lets Supertest exercise the same app without production startup side effects.
 - **Alternatives considered**: Use a prebuilt rate-limit package, or put lookup, bucket math, and HTTP behavior in one route. A generic rate-limit package may implement a different policy or store model than this spec's token bucket. A monolithic handler makes deterministic boundary tests and secret-safe error handling harder to isolate.
 
@@ -19,7 +19,7 @@
 
 ### Configuration and API-key secrets
 
-- **Decision**: Store tiers and the client-to-tier map in JSON. Commit `config/demo.json` with the default tier values and visibly fake keys. Support a complete alternative file selected by `RATE_LIMITER_CONFIG_FILE` and a JSON `RATE_LIMITER_CLIENTS_JSON` environment override that replaces only the client map. Ignore `config/local.json`; require an explicit non-demo source in production.
+- **Decision**: Store tiers and the client-to-tier map in JSON. Commit config/demo.jsonwith the default tier values and visibly fake keys. Support a complete alternative file selected byRATE_LIMITER_CONFIG_FILE. Ignore config/local.json.
 - **Rationale**: JSON is directly supported by Node and keeps the schema inspectable without adding a parser dependency. Demo values enable tests and local examples without being credentials. Explicit overrides allow real keys without committing them, and environment precedence is unambiguous. Preventing the demo file from becoming a production fallback avoids accidental deployment with sample credentials.
 - **Alternatives considered**: Put real keys in committed defaults (rejected because secrets must never be committed); merge key maps implicitly (rejected because precedence and accidental demo-key retention would be surprising); add a secrets-manager integration (outside the requested scope).
 
