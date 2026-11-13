@@ -140,4 +140,4 @@ An operator can configure client keys and tier limits, and receives a clear star
 - Default tier definitions apply unless valid configuration overrides them; configured keys must map to one of the three defined tiers.
 - When a request is rate limited, the error response need not include the two success-only rate-limit headers.
 - Restarting the process resets all in-memory rate-limit state; persistence and cross-instance coordination are intentionally excluded.
-- Configuration is JSON: committed demo configuration provides the default tiers and visibly fake keys; real keys are supplied through a git-ignored local file or an environment variable. The selected configuration behavior is detailed in the implementation plan.
+- Configuration is JSON: committed demo configuration provides the default tiers and visibly fake keys; real keys are supplied through a git-ignored local file (`config/local.json`) selected with `RATE_LIMITER_CONFIG_FILE`. The selected configuration behavior is detailed in the implementation plan.

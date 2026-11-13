@@ -77,7 +77,7 @@ description: "Implementation tasks for the tiered rate limiter"
 
 **Purpose**: Make startup failures safe. Validation against the acceptance tests and release gates is performed by the student's harness after implementation, not by the implementing agent.
 
-- [ ] T016 Add safe top-level startup error handling in `src/server.js` and verify no request headers, API keys, raw configuration, or parser input are written to logs or responses (FR-009, FR-011; AC-10).
+- [ ] T016 Handle failures other than `ConfigError` during startup in `src/server.js` (for example the port already being in use or an unexpected exception): print a secret-safe message, exit non-zero, and ensure no request headers, API keys, raw configuration or parser input are written to logs or responses (FR-009, FR-011; AC-10).
 
 ## Dependencies & Execution Order
 
