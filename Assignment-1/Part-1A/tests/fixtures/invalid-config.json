@@ -1,0 +1,8 @@
+{
+  "tiers": {
+    "free": { "capacity": 10, "refillRatePerSecond": 1 },
+    "pro": { "capacity": 100, "refillRatePerSecond": 10 },
+    "enterprise": { "capacity": 1000, "refillRatePerSecond": 100 }
+  },
+  "clients": { "SECRET-KEY-123": "platinum" }
+}
