@@ -1,0 +1,35 @@
+{
+  "label": "verification",
+  "timestamp": "2026-11-22T10-11-32-395Z",
+  "overall": "PASS",
+  "gates": [
+    {
+      "gate": "lint",
+      "command": "npx eslint --config .harness/eslint.config.js src",
+      "exitCode": 0,
+      "passed": true,
+      "startedAt": "2026-11-22T10:11:32.403Z"
+    },
+    {
+      "gate": "sast",
+      "command": "npx eslint --config .harness/eslint.security.config.js --max-warnings 0 src",
+      "exitCode": 0,
+      "passed": true,
+      "startedAt": "2026-11-22T10:11:33.404Z"
+    },
+    {
+      "gate": "audit",
+      "command": "npm audit --audit-level=high",
+      "exitCode": 0,
+      "passed": true,
+      "startedAt": "2026-11-22T10:11:33.900Z"
+    },
+    {
+      "gate": "tests",
+      "command": "npx jest --config .harness/jest.config.js --coverage",
+      "exitCode": 0,
+      "passed": true,
+      "startedAt": "2026-11-22T10:11:36.537Z"
+    }
+  ]
+}
