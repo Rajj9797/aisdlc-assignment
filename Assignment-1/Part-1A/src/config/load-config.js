@@ -67,7 +67,7 @@ function validateConfig(config) {
 function loadConfig({ env = {}, readFile } = {}) {
   const read = typeof readFile === 'function'
     ? readFile
-    : (path) => fs.readFileSync(path, 'utf8');
+    : fs.readFileSync;
   const path = env.RATE_LIMITER_CONFIG_FILE || 'config/demo.json';
 
   let contents;
