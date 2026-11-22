@@ -20,7 +20,7 @@ function start() {
   try {
     const clock = createMonotonicClock();
     app = createApp({ config, now: clock.now });
-  } catch (error) {
+  } catch {
     process.stderr.write('Startup failed due to an unexpected application error\n');
     process.exitCode = 1;
     return;
@@ -36,7 +36,7 @@ function start() {
   let server;
   try {
     server = app.listen(parsedPort, () => {});
-  } catch (error) {
+  } catch {
     process.stderr.write('Startup failed: the server could not listen on the requested port\n');
     process.exitCode = 1;
     return;

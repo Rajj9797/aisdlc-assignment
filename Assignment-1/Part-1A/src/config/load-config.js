@@ -20,8 +20,9 @@ function validateConfig(config) {
   }
 
   const tierNames = ['free', 'pro', 'enterprise'];
+  const tiers = new Map(Object.entries(config.tiers));
   for (const tierName of tierNames) {
-    const tier = config.tiers[tierName];
+    const tier = tiers.get(tierName);
     if (!isPlainObject(tier)) {
       throw new ConfigError(`tiers.${tierName} is missing`);
     }
@@ -48,23 +49,18 @@ function validateConfig(config) {
   }
 
   const clientEntries = Object.entries(config.clients);
-  for (let index = 0; index < clientEntries.length; index += 1) {
-    const [apiKey, tierName] = clientEntries[index];
+  for (const [index, [apiKey, tierName]] of clientEntries.entries()) {
     if (apiKey.trim().length === 0) {
       throw new ConfigError(`clients entry ${index} has a blank API key`);
     }
-    if (!tierNames.includes(tierName) || !config.tiers[tierName]) {
+    if (!tierNames.includes(tierName) || !tiers.has(tierName)) {
       throw new ConfigError(`clients entry ${index} has an unsupported tier`);
     }
   }
 
   return {
-    tiers: {
-      free: { ...config.tiers.free },
-      pro: { ...config.tiers.pro },
-      enterprise: { ...config.tiers.enterprise },
-    },
-    clients: { ...config.clients },
+    tiers: Object.fromEntries(tierNames.map((tierName) => [tierName, { ...tiers.get(tierName) }])),
+    clients: Object.fromEntries(clientEntries),
   };
 }
 
@@ -77,14 +73,14 @@ function loadConfig({ env = {}, readFile } = {}) {
   let contents;
   try {
     contents = read(path);
-  } catch (error) {
+  } catch {
     throw new ConfigError('configuration file could not be read');
   }
 
   let parsed;
   try {
     parsed = JSON.parse(contents);
-  } catch (error) {
+  } catch {
     throw new ConfigError('configuration file contains malformed JSON');
   }
 

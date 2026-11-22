@@ -8,10 +8,12 @@ function createBucketStore({ config, now }) {
     throw new Error('now must be a function');
   }
 
+  const clients = new Map(Object.entries(config.clients));
+  const tiers = new Map(Object.entries(config.tiers));
   const buckets = new Map();
 
   function has(apiKey) {
-    return typeof apiKey === 'string' && Object.prototype.hasOwnProperty.call(config.clients, apiKey);
+    return typeof apiKey === 'string' && clients.has(apiKey);
   }
 
   function consume(apiKey) {
@@ -24,8 +26,8 @@ function createBucketStore({ config, now }) {
       };
     }
 
-    const tierName = config.clients[apiKey];
-    const tier = config.tiers[tierName];
+    const tierName = clients.get(apiKey);
+    const tier = tiers.get(tierName);
     let bucket = buckets.get(apiKey);
 
     if (!bucket) {
