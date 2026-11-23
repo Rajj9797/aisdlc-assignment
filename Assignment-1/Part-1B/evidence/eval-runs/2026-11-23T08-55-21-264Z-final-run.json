@@ -1,0 +1,279 @@
+{
+  "label": "final-run",
+  "timestamp": "2026-11-23T08-55-21-264Z",
+  "configuration": {
+    "model": "gemini-3.5-flash-lite",
+    "temperature": 0,
+    "node": "v25.5.0",
+    "datasetSha256": "07517608b2642e78cf04e6287578be43f4b1d2c374cb822fd2be0511bf56ba35",
+    "delayBetweenCallsMs": 4000
+  },
+  "summary": {
+    "decision": "PASS",
+    "threshold": 0.85,
+    "meanScore": 1,
+    "structuralRate": 1,
+    "guardrailPass": true,
+    "serviceErrors": 0,
+    "cases": 19,
+    "problems": []
+  },
+  "cases": [
+    {
+      "id": "c01",
+      "category": "normal",
+      "traces": [
+        "AC-01",
+        "AC-02",
+        "AC-04",
+        "AC-05",
+        "FR-004"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c02",
+      "category": "normal",
+      "traces": [
+        "AC-02",
+        "AC-04",
+        "AC-05",
+        "FR-010"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c03",
+      "category": "normal",
+      "traces": [
+        "AC-02",
+        "AC-04",
+        "AC-05",
+        "FR-010"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c04",
+      "category": "normal",
+      "traces": [
+        "AC-02",
+        "FR-005"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c05",
+      "category": "normal",
+      "traces": [
+        "AC-02",
+        "FR-006"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c06",
+      "category": "missing-information",
+      "traces": [
+        "AC-03",
+        "FR-007"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c07",
+      "category": "ambiguous",
+      "traces": [
+        "AC-03",
+        "FR-010"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c08",
+      "category": "missing-information",
+      "traces": [
+        "AC-03",
+        "FR-007"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c09",
+      "category": "ambiguous",
+      "traces": [
+        "AC-03",
+        "FR-006"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c10",
+      "category": "boundary",
+      "traces": [
+        "AC-02",
+        "FR-004",
+        "FR-010"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c11",
+      "category": "adversarial",
+      "traces": [
+        "AC-06",
+        "FR-012"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c12",
+      "category": "adversarial",
+      "traces": [
+        "AC-06",
+        "FR-012"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c13",
+      "category": "adversarial",
+      "traces": [
+        "AC-06",
+        "FR-012"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c14",
+      "category": "adversarial",
+      "traces": [
+        "AC-06",
+        "FR-012"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c15",
+      "category": "malformed",
+      "traces": [
+        "AC-07",
+        "FR-013"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c16",
+      "category": "boundary",
+      "traces": [
+        "AC-07",
+        "FR-013"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c17",
+      "category": "malformed",
+      "traces": [
+        "AC-08",
+        "FR-018"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c18",
+      "category": "normal",
+      "traces": [
+        "AC-04",
+        "AC-05",
+        "FR-010"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    },
+    {
+      "id": "c19",
+      "category": "malformed",
+      "traces": [
+        "AC-07",
+        "FR-013"
+      ],
+      "status": "evaluated",
+      "structuralPass": true,
+      "guardrailPass": true,
+      "score": 1,
+      "failures": []
+    }
+  ]
+}
