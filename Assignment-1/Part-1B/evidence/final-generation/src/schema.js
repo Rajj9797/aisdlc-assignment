@@ -1,0 +1,122 @@
+"use strict";
+
+module.exports = {
+  $schema: "https://json-schema.org/draft/2020-12/schema",
+  title: "Natural-Language Reminder Result",
+  type: "object",
+  additionalProperties: false,
+  required: [
+    "intent",
+    "task",
+    "datetime",
+    "snooze_minutes",
+    "clarification_question",
+  ],
+  properties: {
+    intent: {
+      type: "string",
+      enum: [
+        "create_reminder",
+        "reschedule",
+        "snooze",
+        "needs_clarification",
+        "unsupported",
+      ],
+    },
+    task: {
+      type: ["string", "null"],
+    },
+    datetime: {
+      type: ["string", "null"],
+      format: "date-time",
+    },
+    snooze_minutes: {
+      type: ["integer", "null"],
+      minimum: 1,
+      maximum: 1440,
+    },
+    clarification_question: {
+      type: ["string", "null"],
+      minLength: 1,
+    },
+  },
+  allOf: [
+    {
+      if: {
+        properties: {
+          intent: { const: "create_reminder" },
+        },
+        required: ["intent"],
+      },
+      then: {
+        properties: {
+          task: { type: "string", minLength: 1 },
+          datetime: { type: "string", format: "date-time" },
+          snooze_minutes: { type: "null" },
+          clarification_question: { type: "null" },
+        },
+      },
+    },
+    {
+      if: {
+        properties: {
+          intent: { const: "reschedule" },
+        },
+        required: ["intent"],
+      },
+      then: {
+        properties: {
+          datetime: { type: "string", format: "date-time" },
+          snooze_minutes: { type: "null" },
+          clarification_question: { type: "null" },
+        },
+      },
+    },
+    {
+      if: {
+        properties: {
+          intent: { const: "snooze" },
+        },
+        required: ["intent"],
+      },
+      then: {
+        properties: {
+          datetime: { type: "null" },
+          snooze_minutes: { type: "integer", minimum: 1, maximum: 1440 },
+          clarification_question: { type: "null" },
+        },
+      },
+    },
+    {
+      if: {
+        properties: {
+          intent: { const: "needs_clarification" },
+        },
+        required: ["intent"],
+      },
+      then: {
+        properties: {
+          datetime: { type: "null" },
+          snooze_minutes: { type: "null" },
+          clarification_question: { type: "string", minLength: 1 },
+        },
+      },
+    },
+    {
+      if: {
+        properties: {
+          intent: { const: "unsupported" },
+        },
+        required: ["intent"],
+      },
+      then: {
+        properties: {
+          task: { type: "null" },
+          datetime: { type: "null" },
+          snooze_minutes: { type: "null" },
+          clarification_question: { type: "null" },
+        },
+      },
+    },
+  ],
+};
