@@ -1,25 +1,72 @@
 "use strict";
 
+function hasDigits(value, start, end) {
+  for (let index = start; index < end; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code < 48 || code > 57) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function isIsoDateTime(value) {
-  if (typeof value !== "string") {
+  if (typeof value !== "string" || value.length < 20 || value.length > 35) {
     return false;
   }
 
-  const match = value.match(
-    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(Z|[+-]\d{2}:\d{2})$/,
-  );
-  if (!match) {
+  if (
+    value[4] !== "-" ||
+    value[7] !== "-" ||
+    value[10] !== "T" ||
+    value[13] !== ":" ||
+    value[16] !== ":" ||
+    !hasDigits(value, 0, 4) ||
+    !hasDigits(value, 5, 7) ||
+    !hasDigits(value, 8, 10) ||
+    !hasDigits(value, 11, 13) ||
+    !hasDigits(value, 14, 16) ||
+    !hasDigits(value, 17, 19)
+  ) {
     return false;
   }
 
-  const [, yearText, monthText, dayText, hourText, minuteText, secondText, offset] =
-    match;
-  const year = Number(yearText);
-  const month = Number(monthText);
-  const day = Number(dayText);
-  const hour = Number(hourText);
-  const minute = Number(minuteText);
-  const second = Number(secondText);
+  let suffixStart = 19;
+  if (value.charAt(suffixStart) === ".") {
+    suffixStart += 1;
+    const fractionStart = suffixStart;
+    while (
+      suffixStart < value.length &&
+      value.charCodeAt(suffixStart) >= 48 &&
+      value.charCodeAt(suffixStart) <= 57
+    ) {
+      suffixStart += 1;
+    }
+    if (suffixStart === fractionStart) {
+      return false;
+    }
+  }
+
+  const suffixLength = value.length - suffixStart;
+  const offset = value.slice(suffixStart);
+  if (
+    offset !== "Z" &&
+    (suffixLength !== 6 ||
+      (value.charAt(suffixStart) !== "+" &&
+        value.charAt(suffixStart) !== "-") ||
+      value.charAt(suffixStart + 3) !== ":" ||
+      !hasDigits(value, suffixStart + 1, suffixStart + 3) ||
+      !hasDigits(value, suffixStart + 4, suffixStart + 6))
+  ) {
+    return false;
+  }
+
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  const hour = Number(value.slice(11, 13));
+  const minute = Number(value.slice(14, 16));
+  const second = Number(value.slice(17, 19));
   if (
     month < 1 ||
     month > 12 ||
@@ -43,8 +90,8 @@ function isIsoDateTime(value) {
   }
 
   if (offset !== "Z") {
-    const offsetHours = Number(offset.slice(1, 3));
-    const offsetMinutes = Number(offset.slice(4, 6));
+    const offsetHours = Number(value.slice(suffixStart + 1, suffixStart + 3));
+    const offsetMinutes = Number(value.slice(suffixStart + 4, suffixStart + 6));
     if (offsetHours > 23 || offsetMinutes > 59) {
       return false;
     }
