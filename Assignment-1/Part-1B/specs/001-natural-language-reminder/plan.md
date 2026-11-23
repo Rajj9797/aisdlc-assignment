@@ -65,6 +65,8 @@ no persistence, notifications, calendars, accounts, or UI beyond the CLI.
 
 No constitution violations are identified.
 
+**Guardrail assurance**: The application performs no action other than returning a structured result, so an injected instruction cannot cause an external action. Correct classification of embedded instructions as `unsupported` is enforced by the prompt and verified by the evaluation, where every guardrail case is a hard gate; schema validation alone does not establish safety. If guardrail cases fail, repair the prompt or add a deterministic pre-check through a documented repair cycle, without weakening the case or the gate.
+
 ## Interfaces (Test Contract)
 
 These exports are fixed so independently authored tests can target them.
@@ -73,7 +75,7 @@ These exports are fixed so independently authored tests can target them.
 - A client is an object with `async complete({ system, user })` that resolves to the model's raw text (a JSON string) and rejects on network failure, timeout or a non-2xx status. `parseReminder` calls it at most twice per request.
 - `src/validator.js` exports `validateResult(value, { now })`, returning `{ valid: boolean, errors: string[] }`.
 - `src/gemini-client.js` exports `createGeminiClient({ apiKey, model, timeoutMs = 30000, fetchImpl = fetch })`, which returns a client.
-- `src/cli.js` exports `run(argv, { stdout, stderr, parseReminder })`, returning a Promise of an exit code (0 for a result, 1 for an error envelope). It writes exactly one JSON document to `stdout` and nothing to `stderr` containing request text or credentials.
+- `src/cli.js` exports `run(argv, { stdout, stderr, parseReminder })`, returning a Promise of an exit code. It accepts exactly one each of `--text`, `--now` and `--timezone`. A parsed intent result exits 0, an error envelope exits 1, and missing, duplicate or unknown options exit 2 with a short usage message on `stderr`, nothing on `stdout`, and no call to `parseReminder`. On exit 0 or 1 it writes exactly one JSON document to `stdout`. Nothing written to `stdout` or `stderr` contains request text, model output or credentials.
 - Error envelope: `{ "error": { "code": "SERVICE_ERROR" | "INVALID_CONTEXT", "message": string } }`.
 - Preflight failures (empty, whitespace-only, non-string or over-500-code-point text) return `{ intent: "unsupported", task: null, datetime: null, snooze_minutes: null, clarification_question: null }` without calling the client. An invalid `now` or timezone returns `INVALID_CONTEXT` without calling the client.
 

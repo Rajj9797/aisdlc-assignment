@@ -115,6 +115,7 @@ emits one JSON result. Simulate a model service failure and verify the distinct 
 - **FR-001**: The application MUST be a Node.js module and tiny CLI using CommonJS. The module
   MUST expose `parseReminder({ text, now, timezone })`, where `now` is an ISO 8601 timestamp
   supplied by the caller and `timezone` is an IANA timezone name.
+  An optional client argument is a test seam for dependency injection; ordinary callers do not supply it.
 - **FR-002**: The agent MUST return a JSON object with exactly the following keys and no others:
   `intent`, `task`, `datetime`, `snooze_minutes`, and `clarification_question`. Every key MUST
   always be present.
