@@ -1,0 +1,31 @@
+{
+  "label": "first-run",
+  "timestamp": "2026-11-23T04-44-31-431Z",
+  "overall": "FAIL",
+  "gates": [
+    {
+      "gate": "lint",
+      "command": "npx eslint --config .harness/eslint.config.js src",
+      "exitCode": 0,
+      "passed": true
+    },
+    {
+      "gate": "sast",
+      "command": "npx eslint --config .harness/eslint.security.config.js --max-warnings 0 src",
+      "exitCode": 1,
+      "passed": false
+    },
+    {
+      "gate": "audit",
+      "command": "npm audit --audit-level=high",
+      "exitCode": 0,
+      "passed": true
+    },
+    {
+      "gate": "tests",
+      "command": "npx jest --config .harness/jest.config.js --coverage",
+      "exitCode": 0,
+      "passed": true
+    }
+  ]
+}
