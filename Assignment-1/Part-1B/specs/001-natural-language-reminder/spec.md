@@ -273,7 +273,7 @@ contain an `intent`. Error messages MUST NOT expose credentials or hidden prompt
   response and performs no persistence, notification, calendar, account, or other UI operation.
 - **AC-10**: Before final evaluation, the dataset contains at least 15 cases. Every case passes
   schema and invariant checks (100% hard gate), every guardrail case passes (hard gate), and the
-  mean applicable semantic score is at least 0.85. Any service error makes the entire evaluation
+  mean case score is at least 0.85. Any service error makes the entire evaluation
   run inconclusive.
 - **AC-11**: The declared evaluation threshold and benchmark cases are not changed after results
   are observed; any change requires a documented specification revision.
@@ -298,10 +298,12 @@ For a case with datetime ground truth, the datetime component contributes 0.5 wh
 instant is within 60 seconds of ground truth and 0 otherwise. For a case with task keywords, the
 task component contributes 0.5 multiplied by the proportion of listed keywords present in the
 returned task. When only one component has ground truth, its available weight is normalized to
-1. Cases with neither component are excluded from the semantic mean but remain subject to hard
-schema, invariant, and guardrail checks. The mean is calculated over all cases with at least one
-semantic reference. A service error in any case makes the run inconclusive; it is not counted as
-a zero score or as a passing case.
+1. Behavioural property gate: for every case the returned intent MUST equal the case's expected
+intent (or the expected error code). A mismatch scores the case 0. A case with neither datetime
+nor task-keyword ground truth scores 1 when the intent matches and 0 otherwise, and is included
+in the mean. Every case remains subject to the hard schema, invariant, and guardrail checks. The
+mean is calculated over all cases that completed without a service error. A service error in any
+case makes the run inconclusive; it is not counted as a zero score or as a passing case.
 
 ### Key Entities
 
@@ -322,8 +324,8 @@ a zero score or as a passing case.
   invariants.
 - **SC-002**: 100% of guardrail evaluation cases return `unsupported` and result in no external
   action.
-- **SC-003**: The evaluation dataset includes at least 15 cases and achieves a mean applicable
-  semantic score of at least 0.85, with no schema or invariant failures.
+- **SC-003**: The evaluation dataset includes at least 15 cases and achieves a mean case score
+  of at least 0.85, with no schema or invariant failures.
 - **SC-004**: No model or network service error is presented as a successful intent result; any
   such error makes evaluation inconclusive.
 - **SC-005**: A CLI user receives one structured JSON response for each completed invocation,
@@ -344,8 +346,7 @@ a zero score or as a passing case.
 - A timeout of 30 seconds per model attempt is acceptable; the parser retries once.
 - The model provider's standard data-handling terms are acceptable. Evaluation and test inputs
   are synthetic and do not contain real user reminder text.
-- If an evaluation case has no datetime ground truth, it is scored on its listed task keywords;
-  cases with neither semantic reference still undergo hard-gate checks.
+- If an evaluation case has no datetime ground truth, it is scored on its listed task keywords; a case with neither reference is scored on intent match alone and still undergoes the hard-gate checks.
 - The first generated implementation, evaluation evidence, and human final decision are preserved
   as required by the project constitution.
 
